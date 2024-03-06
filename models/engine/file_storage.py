@@ -34,13 +34,18 @@ class FileStorage:
             json.dump(newdict,f)
 
     def reload(self):
+        
         try:
             with open(self.__file_path, "r") as f:
                 data = f.read()
                 if not data:
                     self.__objects = {}
                 else:
-                    self.__objects = json.loads(data)
+                    data = json.loads(data)
+                    from models.base_model import BaseModel
+                    for key, val in data.items():
+                        self.__objects[key] = BaseModel(**val)
+
         except FileNotFoundError:
             pass
         except json.decoder.JSONDecodeError:

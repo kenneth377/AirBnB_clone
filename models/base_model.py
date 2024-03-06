@@ -16,9 +16,10 @@ class BaseModel:
                 if key == "created_at" or key == "updated_at":
                     val = datetime.datetime.strptime(val,"%Y-%m-%dT%H:%M:%S.%f")
                 setattr(self, key, val)
+        storage.new(self)
     
     def __str__(self) -> str:
-        return f"[{self.__class__}] ({self.id}) {self.__dict__}"
+        return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
 
     def save(self) -> None:
         self.updated_at = datetime.datetime.now()
