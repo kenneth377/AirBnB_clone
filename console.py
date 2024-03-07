@@ -10,6 +10,7 @@ from models.place import Place
 from models.review import Review
 import datetime
 
+
 class HBNBCommand(cmd.Cmd):
     prompt = "(hbnb)"
 
@@ -131,7 +132,7 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
         
-        if len(params) < 2:
+        if not params[1]:
             print("** instance id missing **")
             return
         key = f"{params[0]}.{params[1]}"
@@ -163,23 +164,73 @@ class HBNBCommand(cmd.Cmd):
             #     setattr(data,attribute, datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
             # setattr(data,attribute, value)
             # print(data)
+            print(attribute)
+            print(value)
             
-            if isinstance(data, str):
-                setattr(data,attribute, str(value))
-            elif isinstance(data, int):
-                setattr(data,attribute, int(value))
-            elif isinstance(data, float):
-                setattr(data,attribute, float(value))
+            if isinstance(getattr(data, attribute), int):
+                value = int(value)
+            elif isinstance(getattr(data, attribute), float):
+                value = float(value)
+            elif isinstance(getattr(data, attribute), str):
+                value = str(value)
             else:
                 print("** attribute type not supported **")
-            return
+                return
+
+            setattr(data, attribute, value)
+            print(data)
+
            
 
         except Exception as e:
             print(f"An error occured: {e}")
 
     def do_save(self,arg):
-        storage.save() 
+        storage.save()
+
+    def default(self, arg):
+        try:
+            parts = arg.split('.')
+            if len(parts) == 2:
+                method_name, funcnnargs = parts
+                funcname,funcargs = funcnnargs.split("(")
+                if funcname == "all":
+                    self.do_all(method_name)
+                elif funcname == "count":
+                    count= 0
+                    for item in storage.objects.values():
+                        st = str(item).split("]")[0]
+                        mainst= st.lstrip("[")
+                        if mainst == method_name:
+                            count+=1
+                    print(count)
+                elif funcname == "show":
+                    argi =funcargs.rstrip(")")
+                    arg = f"{method_name} {argi}"
+                    
+                    self.do_show(arg)
+
+                elif funcname == "destroy":
+                    argi =funcargs.rstrip(")")
+                    arg = f"{method_name} {argi}"
+                    
+                    self.do_destroy(arg)
+
+                elif funcname == "update":
+                    argi =funcargs.rstrip(")")
+                    keyargs = argi.split(",")
+                    argmid = keyargs[0].lstrip('"').rstrip('"')
+                    keyargs1 = keyargs[1].lstrip(' "').rstrip('"')
+                    keyargs2 = keyargs[2].lstrip('"').rstrip('"')
+                    print(keyargs2)
+                    argj = f"{method_name} {argmid} {keyargs1} {keyargs2}"
+                    self.do_update(argj)
+            else:
+                print("Invalid input format. Use 'ClassName.method'.")
+
+        except Exception as e:
+            print("Error:", e)
+
 
     def do_stringi(self,arg):
         print(storage.objects)
