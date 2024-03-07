@@ -42,9 +42,42 @@ class FileStorage:
                     self.__objects = {}
                 else:
                     data = json.loads(data)
-                    from models.base_model import BaseModel
+                    
+                    
                     for key, val in data.items():
-                        self.__objects[key] = BaseModel(**val)
+                        try:
+                            if val["__class__"] == "BaseModel":
+                                from models.base_model import BaseModel
+                                self.__objects[key] = BaseModel(**val)
+
+                            elif val["__class__"] == "User":
+                                from models.user import User
+                                self.__objects[key] = User(**val)
+
+                            elif val["__class__"] == "Amenity":
+                                from models.amenity import Amenity
+                                self.__objects[key] = Amenity(**val)
+                            
+                            elif val["__class__"] == "Place":
+                                from models.place import Place
+                                self.__objects[key] = Place(**val)
+
+                            elif val["__class__"] == "City":
+                                from models.city import City
+                                self.__objects[key] = City(**val)
+
+                            elif val["__class__"] == "Review":
+                                from models.review import Review
+                                self.__objects[key] = Review(**val)
+
+                            else:
+                                from models.state import State
+                                self.__objects[key] = State(**val)
+                        
+                        except Exception as e:
+                            print("An error occurred:", e)
+                            return
+
 
         except FileNotFoundError:
             pass
@@ -52,5 +85,6 @@ class FileStorage:
             pass
         except Exception as e:
             print("An error occurred:", e)
+            return
 
         return self.__objects

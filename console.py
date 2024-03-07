@@ -86,7 +86,6 @@ class HBNBCommand(cmd.Cmd):
 
         try:
             storage.objects.pop(key)
-            storage.save()
         
         except KeyError:
             print("** no instance found **")
@@ -119,11 +118,69 @@ class HBNBCommand(cmd.Cmd):
                 return
             
     def do_update(self,arg):
-        args = arg.split(" ")
-        if not args:
+        # args = arg.split(" ")
+        if not arg:
             print("** class name missing **")
             return
-       
+        
+        params =arg.split(" ")
+        try:
+            globals()[params[0]]
+        
+        except KeyError:
+            print("** class doesn't exist **")
+            return
+        
+        if len(params) < 2:
+            print("** instance id missing **")
+            return
+        key = f"{params[0]}.{params[1]}"
+        
+        data =storage.objects[key]
+        if key not in storage.objects.keys():
+            print("no instance found")
+            return
+        
+        if len(params) < 3:
+            print("** attribute name missing **")
+            return
+        
+        attribute = params[2]
+        if attribute not in data.to_dict().keys():
+            print("** attribute doesn't exist **")
+            return
+        
+        if len(params) < 4:
+            print("**value missing**")
+            return
+        
+        value = params[3]
+
+        try:
+            # typ2 = type(getattr(data,attribute))
+            # print(typ2(value))
+            # if isinstance(getattr(data,attribute), datetime.datetime):
+            #     setattr(data,attribute, datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
+            # setattr(data,attribute, value)
+            # print(data)
+            
+            if isinstance(data, str):
+                setattr(data,attribute, str(value))
+            elif isinstance(data, int):
+                setattr(data,attribute, int(value))
+            elif isinstance(data, float):
+                setattr(data,attribute, float(value))
+            else:
+                print("** attribute type not supported **")
+            return
+           
+
+        except Exception as e:
+            print(f"An error occured: {e}")
+
+    def do_save(self,arg):
+        storage.save() 
+
     def do_stringi(self,arg):
         print(storage.objects)
 
