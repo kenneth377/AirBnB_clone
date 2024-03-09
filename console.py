@@ -1,4 +1,5 @@
 import cmd
+import json
 from models.engine.file_storage import FileStorage
 from models.base_model import BaseModel
 from models.__init__ import storage
@@ -9,6 +10,7 @@ from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
 import datetime
+import re
 
 
 class HBNBCommand(cmd.Cmd):
@@ -45,7 +47,7 @@ class HBNBCommand(cmd.Cmd):
         
         params = arg.split(" ")
         
-        if len(params)<2:
+        if len(params)<2 or not params[1]:
             print("** instance id missing **")
             return
 
@@ -118,8 +120,19 @@ class HBNBCommand(cmd.Cmd):
                 print(f"** class doesn't exist **")
                 return
             
-    def do_update(self,arg):
+    def do_update(self,arg,**kwargs):
         # args = arg.split(" ")
+        if kwargs:
+           ckey = f'{kwargs["classname"]}.{kwargs["key"]}'
+           data = storage.objects[ckey]
+           for key,val in kwargs.items():
+            print(key)
+            if not key == "classname" and not key == "key":
+                setattr(data,key,val)
+            
+            print(data)
+            return
+
         if not arg:
             print("** class name missing **")
             return
@@ -137,7 +150,6 @@ class HBNBCommand(cmd.Cmd):
             return
         key = f"{params[0]}.{params[1]}"
         
-        data =storage.objects[key]
         if key not in storage.objects.keys():
             print("no instance found")
             return
@@ -145,6 +157,8 @@ class HBNBCommand(cmd.Cmd):
         if len(params) < 3:
             print("** attribute name missing **")
             return
+        
+        data =storage.objects[key]
         
         attribute = params[2]
         if attribute not in data.to_dict().keys():
@@ -164,8 +178,8 @@ class HBNBCommand(cmd.Cmd):
             #     setattr(data,attribute, datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f"))
             # setattr(data,attribute, value)
             # print(data)
-            print(attribute)
-            print(value)
+            # print(attribute)
+            # print(value)
             
             if isinstance(getattr(data, attribute), int):
                 value = int(value)
@@ -207,7 +221,7 @@ class HBNBCommand(cmd.Cmd):
                 elif funcname == "show":
                     argi =funcargs.rstrip(")")
                     arg = f"{method_name} {argi}"
-                    
+                    print(argi)
                     self.do_show(arg)
 
                 elif funcname == "destroy":
@@ -218,13 +232,24 @@ class HBNBCommand(cmd.Cmd):
 
                 elif funcname == "update":
                     argi =funcargs.rstrip(")")
-                    keyargs = argi.split(",")
-                    argmid = keyargs[0].lstrip('"').rstrip('"')
-                    keyargs1 = keyargs[1].lstrip(' "').rstrip('"')
-                    keyargs2 = keyargs[2].lstrip('"').rstrip('"')
-                    print(keyargs2)
-                    argj = f"{method_name} {argmid} {keyargs1} {keyargs2}"
-                    self.do_update(argj)
+                    if "{" in argi:
+                        keyargs = argi.split(",",1)
+                        keyid = keyargs[0].lstrip('"').rstrip('"')
+                        realkey = keyargs[1].replace("'","\"")
+                        keydict = json.loads(realkey.lstrip().rstrip())
+                        keydict["key"] = keyid
+                        keydict["classname"] = method_name
+                        argk = ""
+                        self.do_update(argk,**keydict)
+                    else:
+                        keyargs = argi.split(",")
+                        keyid = keyargs[0].lstrip('"').rstrip('"')
+                        
+                        keyattribute = keyargs[1].lstrip(' "').rstrip('"')
+                        keyvalue = keyargs[2].lstrip(' "').rstrip('"')
+                        arg = f"{method_name} {keyid} {keyattribute} {keyvalue}"
+                        self.do_update(arg)
+                    
             else:
                 print("Invalid input format. Use 'ClassName.method'.")
 
