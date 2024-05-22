@@ -11,11 +11,12 @@ class BaseModel:
             self.updated_at = datetime.datetime.now()
             storage.new(self)
 
-        for key,val in kwargs.items():
-            if not key == "__class__":
-                if key == "created_at" or key == "updated_at":
-                    val = datetime.datetime.strptime(val,"%Y-%m-%dT%H:%M:%S.%f")
-                setattr(self, key, val)
+        else:
+            for key,val in kwargs.items():
+                if not key == "__class__":
+                    if key == "created_at" or key == "updated_at":
+                        val = datetime.datetime.strptime(val,"%Y-%m-%dT%H:%M:%S.%f")
+                    setattr(self, key, val)
         storage.new(self)
     
     def __str__(self) -> str:
@@ -30,7 +31,7 @@ class BaseModel:
         returndict["__class__"] = self.__class__.__name__
         for key,val in self.__dict__.items():
             if key == "created_at" or key == "updated_at":
-                val = val.isoformat()
+                val = val.strftime("%Y-%m-%dT%H:%M:%S.%f")    
             returndict[key] = val
 
         return returndict
